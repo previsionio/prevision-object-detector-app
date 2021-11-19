@@ -13,7 +13,6 @@ if (cover) {
 
 var photoFileForm = document.getElementById("infos-from-image");
 var photoButton = document.getElementById("photo-button");
-console.log(photoButton.clientWidth)
 
 var errorMessageNode = document.getElementById("error-message");
 var labelsNode = document.getElementById("label-detected");
@@ -21,13 +20,6 @@ var presentationNode = document.getElementById("presentation");
 
 const PUBLIC_FRIENDLY_MESSAGE = "Something went wrong. model is currently unavailable due to a large number of request."
 
-const names = {
-    'patepresseecuite': 'fromage à pâte pressée cuite',
-    'patemolleacroutelavee': "fromage à pâte molle à croute lavée",
-    'patemollecroutenaturelle': "fromage de chèvre",
-    'patepresseenoncuite': "fromage à pâte pressée non cuite",
-    "patepersillee": "fromage à pâte persillée"
-}
 
 function clearNode(node) {
     node.innerHTML = ""
@@ -75,49 +67,46 @@ function displayResult(imagePredictionBoxes, scaleW = 1, scaleH = 1) {
         adviceText.innerHTML = advices
     }
 
-    console.log(adviceText)
 
-    const probableCheeze = imagePredictionBoxes.predictions
-    const nbCheeze = probableCheeze.length
-    let cheeseList = []
-    // Lets draw bounding box and label only if cheese
-    if (nbCheeze == 1) {
-
+    const probableObject = imagePredictionBoxes.predictions
+    const nbObject = probableObject.length
+    let objectList = []
+    // Lets draw bounding box and label only if objects
+    if (nbObject == 1) {
 
 
-        // While having sorted the cheese, we displya label inner text and proba
+
+        // While having sorted the object, we displya label inner text and proba
         // of the last one only, aka the most frequent
 
-        for (let cheese of probableCheeze) {
+        for (let object of probableObject) {
             const square = document.createElement("div")
 
             label.innerText = `Du Fromage`
 
 
-            if ("label" in cheese) {
-                if (cheese.label in names) {
-                    label.innerText = `${names[cheese.label]} `
-                    cheeseList.push(`( ${(100 * cheese.probability).toPrecision(4)} %  )`)
-                }
+            if ("label" in object) {
+                label.innerText = `${object.label}`
+                objectList.push(`( ${(100 * object.probability).toPrecision(4)} %  )`)
             }
 
-            if ("probability" in cheese) {
-                if (cheese.probability > 0.8 && cheese.probability <= 1) {
+            if ("probability" in object) {
+                if (object.probability > 0.8 && object.probability <= 1) {
                     probaValue.innerText = "I'm quite sure that this is a "
                 }
 
-                if (cheese.probability > 0.6 && cheese.probability <= 0.8) {
+                if (object.probability > 0.6 && object.probability <= 0.8) {
                     probaValue.innerText = "Huum, it probably is a"
                 }
 
-                if (cheese.probability > 0.4 && cheese.probability <= 0.6) {
+                if (object.probability > 0.4 && object.probability <= 0.6) {
                     probaValue.innerText = "I am not quite sure but maybe it is a "
                 }
             }
 
 
             // Draw a bounding box for each
-            const [yTopRelative, xLeftRelative, yBottomRelative, xRightRelative] = cheese.detection_box
+            const [yTopRelative, xLeftRelative, yBottomRelative, xRightRelative] = object.detection_box
 
             const xLeftAbsolute = xLeftRelative * viewer.clientWidth
             const yTopAbsolute = yTopRelative * viewer.clientHeight
@@ -126,21 +115,21 @@ function displayResult(imagePredictionBoxes, scaleW = 1, scaleH = 1) {
 
             square.classList.add('bounding-box')
 
-            if ("label" in cheese) {
-                square.classList.add(cheese.label)
+            if ("label" in object) {
+                square.classList.add(object.label)
             }
 
-            if ("probability" in cheese) {
-                if (cheese.probability > 0.8 && cheese.probability <= 1) {
+            if ("probability" in object) {
+                if (object.probability > 0.8 && object.probability <= 1) {
                     square.classList.add("sure");
                 }
-                if (cheese.probability > 0.6 && cheese.probability <= 0.8) {
+                if (object.probability > 0.6 && object.probability <= 0.8) {
                     square.classList.add("quite-sure");
                 }
-                if (cheese.probability > 0.4 && cheese.probability <= 0.6) {
+                if (object.probability > 0.4 && object.probability <= 0.6) {
                     square.classList.add("not-quite-sure");
                 }
-                if (cheese.probability > 0 && cheese.probability <= 0.4) {
+                if (object.probability > 0 && object.probability <= 0.4) {
                     square.classList.add("not-sure");
                 }
             }
@@ -156,46 +145,38 @@ function displayResult(imagePredictionBoxes, scaleW = 1, scaleH = 1) {
             viewer.parentNode.insertBefore(square, viewer.nextSibling)
         }
 
-        console.log(cheeseList)
-        console.log(cheeseList.slice(-1))
         labelsNode.append(probaValue)
         labelsNode.append(label)
-        adviceText.innerText = `${adviceText.innerText}.\n${(cheeseList.slice(-1).join(","))}`
+        adviceText.innerText = `${adviceText.innerText}.\n${(objectList.slice(-1).join(","))}`
 
 
     }
 
-    if (nbCheeze > 1) {
+    if (nbObject > 1) {
 
+        const objectsLabels = new Set([...probableObject.map(c => c.label)])
 
+        const Counter = {};
+        for (let currentObject of objectsLabels) {
 
-  
-        const cheesesLabels = new Set([...probableCheeze.map(c => c.label)])
-        console.log(cheesesLabels)
-        const Counter ={};
-        for (let currentCheese of  cheesesLabels) {
-            console.log(currentCheese)
-            Counter[currentCheese] = probableCheeze.filter(cheese => cheese.label === currentCheese).length
+            Counter[currentObject] = probableObject.filter(object => object.label === currentObject).length
         }
-        console.log(Counter)
 
-        const sentences = Object.entries(Counter).map( ([label, count]) => `${count} ${label in names ? names[label] : "unknown"}`)
-        
-        probaValue.innerText = `There are ${nbCheeze} cheeses on this image ( ${sentences.join(', ')} )`
 
-        for (let cheese of probableCheeze) {
+        const sentences = Object.entries(Counter).map(([label, count]) => `${count} ${label}`)
+
+        probaValue.innerText = `There are ${nbObject} objects on this image ( ${sentences.join(', ')} )`
+
+        for (let object of probableObject) {
             const square = document.createElement("div")
 
-            if ("label" in cheese) {
-                if (cheese.label in names) {
-
-                    cheeseList.push(`( ${(100 * cheese.probability).toPrecision(4)} %  )`)
-                }
+            if ("label" in object) {
+                objectList.push(`( ${(100 * object.probability).toPrecision(4)} %  )`)
             }
 
 
             // Draw a bounding box for each
-            const [yTopRelative, xLeftRelative, yBottomRelative, xRightRelative] = cheese.detection_box
+            const [yTopRelative, xLeftRelative, yBottomRelative, xRightRelative] = object.detection_box
 
             const xLeftAbsolute = xLeftRelative * viewer.clientWidth
             const yTopAbsolute = yTopRelative * viewer.clientHeight
@@ -204,21 +185,21 @@ function displayResult(imagePredictionBoxes, scaleW = 1, scaleH = 1) {
 
             square.classList.add('bounding-box')
 
-            if ("label" in cheese) {
-                square.classList.add(cheese.label)
+            if ("label" in object) {
+                square.classList.add(object.label)
             }
 
-            if ("probability" in cheese) {
-                if (cheese.probability > 0.8 && cheese.probability <= 1) {
+            if ("probability" in object) {
+                if (object.probability > 0.8 && object.probability <= 1) {
                     square.classList.add("sure");
                 }
-                if (cheese.probability > 0.6 && cheese.probability <= 0.8) {
+                if (object.probability > 0.6 && object.probability <= 0.8) {
                     square.classList.add("quite-sure");
                 }
-                if (cheese.probability > 0.4 && cheese.probability <= 0.6) {
+                if (object.probability > 0.4 && object.probability <= 0.6) {
                     square.classList.add("not-quite-sure");
                 }
-                if (cheese.probability > 0 && cheese.probability <= 0.4) {
+                if (object.probability > 0 && object.probability <= 0.4) {
                     square.classList.add("not-sure");
                 }
             }
@@ -234,10 +215,9 @@ function displayResult(imagePredictionBoxes, scaleW = 1, scaleH = 1) {
             viewer.parentNode.insertBefore(square, viewer.nextSibling)
         }
 
-        console.log(cheeseList)
-        console.log(cheeseList.slice(-1))
+
         labelsNode.append(probaValue)
-        adviceText.innerText = `${adviceText.innerText}.\n${(cheeseList.slice(-1).join(","))}`
+        adviceText.innerText = `${adviceText.innerText}.\n${(objectList.slice(-1).join(","))}`
 
 
     }
@@ -308,30 +288,27 @@ function displayImage(formIdSrc) {
 
         // Use the phot h button size as ref
         // as the cover fit with the image
-        console.log(`${box_w},${box_h}`)
+
 
 
         viewer.onload = function () {
 
             const ratio = this.width / this.height;
-            console.log('------------------------------')
+
 
 
             if (this.width > box_w) {
-                console.log('Case 1')
+
                 this.width = box_w;
                 this.height = this.width / ratio;
             }
 
 
             if (this.height > box_h) {
-                console.log('Case 2')
+
                 this.height = box_h
                 this.width = ratio * this.height
             }
-
-            console.log(`Image is ${this.height}x${this.width}`)
-            console.log(`Cover is ${this.offsetHeight}x${this.offsetWidth}`)
 
 
             URL.revokeObjectURL(viewer.src) // free memory

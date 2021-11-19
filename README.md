@@ -60,7 +60,7 @@ You can change the content of the `app/templates/about` page or add page to you 
 
 You can change colors and font in the `app/styles.css` file.
 
-
+About your model, you can edit advice from object detected and threshold in the `routers/blueprint_model/adviceabout` function.
 
 ## Prod
 

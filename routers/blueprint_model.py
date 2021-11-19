@@ -15,78 +15,36 @@ logger = logging.getLogger('model')
 logging.basicConfig(
     format='[ %(name)s API ] %(asctime)s %(message)s', level=logging.WARNING)
 
-LABELS = ['patepresseecuite',
-          'patemolleacroutelavee',
-          'patemollecroutenaturelle',
-          'patepersillee',
-          'patepresseenoncuite']
-
-names = {
-    'patepresseecuite': 'pâte pressée cuite',
-    'patemolleacroutelavee': "pâte molle à croute lavée",
-    'patemollecroutenaturelle': "fromage de chèvre.",
-    'patepresseenoncuite': "pâte pressée non cuite",
-    "patepersillee" :"pâte persillée"
-}
 
 
 # TODO : fill it
-def adviceaboutcheese(category):
-    if category == 'patemolleacroutelavee':
-        return choice([
-            "Ouch ! be aware that this kind of cheese are often stinky. You should try Sweet White wine with it",
-            "This kind of cheese looks like it comes frome North of France. Eat it with a Jurançons or a Côteaux-du-layon ",
-            "Better with an Alsace Gewurztraminer Blanc"
-        ])
-    if category == 'patemollecroutenaturelle':
-        return choice([
-            "This kind of cheese often come from Goat's milk. It's very soft and a good entry point to France's cheeses! You could eat it with them with Touraine, Vouvray or Chinon",
-            "Huuum. Les Fromages de Chèvres may range from very soft to very tasty. A wine from Anjou or Bordeaux will be great with this one !",
-            "Goat(s cheese. Try Sancerre or Côte-de-Beaune with the freshest one, Vouvray or Sancerres with the more mature."
-        ])
-    if category == 'patepersillee':
-        return choice([
-            "Fromages à pâte persillée are very tasy cheese. The most famous is Le Roquefort but you should try Le Bleu d'auvergne or Le Bleu de Causse. Drink a Sauternes",
-            "Fromage à pâte persillée. They taste well with Cherry jam and a glass of Cahors or  Madiran",
-            "A Fromage à pâte persillé. There exist two kind, some with very strong taste ( Roquefort ) but some are softer ( Bleu de Gex ). Banyuls will taste fine with it"
-        ])        
-    if category == 'patepresseenoncuite':
-        return choice([
-            "'Fromages  à pates pressee non cuite' are the most common cheese in France. There is a lot of variety like reblochon or even Cantal. Pauillac and châteauneuf-du-pape are the way to go",
-            "'Fromages  à pates pressee non cuite'  could range from very runny cheese, like reblochon, to firm ones like cantal. Eat with a Meursault!"
-        ])
+def adviceabout(category):
+    # Build a function that return a sentence about category
+    return choice([
+        "This is some sentence about the object detected",
+        "This is another random sentence"
+    ])
 
-    if category == 'patepresseecuite':
-        return choice([
-            "Fromage a pate pressee cuite are not the more interessting. Try other cheeses."
-        ])
-    
-    if category in names :
-        return f"we like les fromages à {names[category]}"
-    
-    return f"This kind of cheese is unknknown to me but, hey, I like all cheeses !"
-
-
-def howtoplateaudefromage(stats):
+def adviceaboutmanyobjects(stats):
     nunique = len(stats)
     if nunique == 1:
-        return adviceaboutcheese(stats.most_common(1)[0][0])
+        return adviceabout(stats.most_common(1)[0][0])
 
     if nunique > 1 :
         s = stats.most_common(2)
         # top is very more frequent
         if s[0][1] >= 2*s[1][1]:
-            return adviceaboutcheese(stats.most_common(1)[0][0])
+            return adviceabout(stats.most_common(1)[0][0])
 
-    return f"There are several cheese on this image"
+    return f"There are several Objects on this image"
 
 
 def didntgetitsentence():
     return choice([
         "Hum sorry, I did not get it. Maybe lighthing is off",
-        "Can't find any cheese here. Maybe try from another angle",
-        "Sorry image is fuzzy. Are you sure there is any cheese here ?",
-        "Can't see no cheese. Try to get closer or get a better light."
+        "Can't find any object  here. Maybe try from another angle",
+        "Sorry image is fuzzy. Are you sure there is any object here ?",
+        "Can't see no object. Try to get closer or get a better light."
     ])
 
 
@@ -100,28 +58,28 @@ def addadvice(prediction):
         prediction['predictions'] = best
 
         # Ok magic sauce
-        ncheese = len(best)
-        uniquecheese = list(set([c['label'] for c in best]))
-        nuniquecheese = len(uniquecheese)
-        prediction['ncheese'] = ncheese
-        prediction['uniquecheese'] = uniquecheese
-        prediction['nuniquecheese'] = nuniquecheese
+        nobject = len(best)
+        uniqueobject = list(set([c['label'] for c in best]))
+        nuniqueobject = len(uniqueobject)
+        prediction['nobject'] = nobject
+        prediction['uniqueobject'] = uniqueobject
+        prediction['nuniqueobject'] = nuniqueobject
         basicstats = Counter([c['label'] for c in best if 'label' in c])
         prediction['basicstats'] = basicstats
 
         advice = didntgetitsentence()
 
-        if ncheese == 1:
+        if nobject == 1:
             p = best[0]['probability']
             l = best[0]['label']
 
             if p < 0.7:
-                advice = f"It smells like a fromage à {names[l]} ( but not sure about it )"
+                advice = f"It looks like a  {l} ( but not sure about it )"
             else:
-                advice = adviceaboutcheese(l)
+                advice = adviceabout(l)
         else:
-            if ncheese > 1 :
-                advice = howtoplateaudefromage(basicstats)
+            if nobject > 1 :
+                advice = adviceaboutmanyobjects(basicstats)
 
         prediction['advice'] = advice
     return prediction
