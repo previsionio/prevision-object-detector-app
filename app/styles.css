@@ -14,25 +14,28 @@
   --color-confident: #97c44e;
   --color-perfect: #4ba5d8;
   --button-size: 175px;
+
+  --primary-font: "Roboto";
+  --hero-font:"Montserrat";
 }
 
 body {
   background-color: var(--prevision-primary);
   color: white;
-  font-family: "Roboto", sans-serif;
+  font-family: var(--primary-font), sans-serif;
 }
 
 h1 {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--hero-font) , sans-serif;
   text-transform: uppercase;
   font-weight: bolder;
 }
 
-#about-cheezam-text p {
+#about-model-text p {
   margin-top: 1.4em;
 }
 h3 {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--hero-font) , sans-serif;
   text-transform: uppercase;
   font-weight: bolder;
   font-size: 24px;
@@ -126,12 +129,12 @@ footer a {
 /* Specific Element : Square around image */
 .big-label {
   color: var(--prevision-secondary);
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--hero-font) , sans-serif;
 }
 
 .big-value {
   color: var(--prevision-tertiary);
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--hero-font) , sans-serif;
 }
 
 .bounding-box {
@@ -187,7 +190,7 @@ footer a {
 #user-msg {
   border: 3px solid var(--prevision-secondary);
   background-color: var(--darkest-grey);
-  font-family: "Montserrat", sans-serif;
+  font-family:var(--hero-font) , sans-serif;
   font-weight: bolder;
   display: inline-block;
   text-align: center;
